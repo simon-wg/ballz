@@ -19,9 +19,17 @@ class Model {
 
 	double energy;
 
-	static final double GRAVITY = -9.82;
+	final double GRAVITY = -0.982;
+
+	double EXPECTED_ENERGY;
 	
 	Ball [] balls;
+
+	int physicsCounter = 0;
+
+	double minEnergy = 100;
+
+	double maxEnergy;
 
 	Model(double width, double height) {
 		areaWidth = width;
@@ -29,9 +37,14 @@ class Model {
 
 		
 		// Initialize the model with a few balls
-		balls = new Ball[2];
-		balls[0] = new Ball(width / 3, height * 0.9, 1, 0, 0.2);
-		balls[1] = new Ball(2 * width / 3, height * 0.9, -0.5, 0, 0.3);
+		balls = new Ball[3];
+		balls[0] = new Ball(width / 3, height * 0.9, 1.2, 1.6, 0.2);
+		balls[1] = new Ball(2 * width / 3, height * 0.7, -0.6, 0.6, 0.3);
+		balls[2] = new Ball(width / 3, height * 0.4, -1, -1.0, 0.5);
+
+		EXPECTED_ENERGY = 0.5 * (balls[0].vx * balls[0].vx + balls[0].vy * balls[0].vy +
+				balls[1].vx * balls[1].vx + balls[1].vy * balls[1].vy +
+				balls[2].vx * balls[2].vx + balls[2].vy * balls[2].vy) - GRAVITY * (balls[0].y + balls[1].y + balls[2].y);
 	}
 
 	void step(double deltaT) {
@@ -61,24 +74,17 @@ class Model {
 					double angle = b.angleToOtherBall(other);
 
 					// rotate the speed of the balls
-					double[] new_speed = rotate(b.vx, b.vy, angle);
-					double[] new_speed_other = rotate(other.vx, other.vy, angle);
+					double[] b_rotated_v = rotate(b.vx, b.vy, -angle);
+					double[] other_rotated_v = rotate(other.vx, other.vy, -angle);
 
-					// swap the x speed of the balls
-					b.vx = new_speed_other[0];
-					other.vx = new_speed[0];
+					double[] b_unrotated_v = rotateInverse(other_rotated_v[0], b_rotated_v[1], -angle);
+					double[] other_unrotated_v = rotateInverse(b_rotated_v[0], other_rotated_v[1], -angle);
 
-					b.vy = new_speed[1];
-					other.vy = new_speed_other[1];
+					b.vx = b_unrotated_v[0];
+					b.vy = b_unrotated_v[1];
 
-					double[] new_speed2 = rotate(b.vx, b.vy, -angle);
-					double[] new_speed_other2 = rotate(other.vx, other.vy, -angle);
-
-					b.vx = new_speed2[0];
-					other.vx = new_speed_other2[0];
-
-					b.vy = new_speed2[1];
-					other.vy = new_speed_other2[1];
+					other.vx = other_unrotated_v[0];
+					other.vy = other_unrotated_v[1];
 
 					// move the balls so they don't overlap
 				}
@@ -93,7 +99,25 @@ class Model {
 		
 			energy += (b.vx * b.vx + b.vy * b.vy)/2 - GRAVITY * b.y;
 		}
-		System.out.println(energy);
+		// Adjust for energy loss
+		double energy_factor = Math.sqrt(EXPECTED_ENERGY / energy);
+		for (Ball b : balls) {
+			b.vx *= energy_factor;
+			b.vy *= energy_factor;
+		}
+		// System.out.println("Energy loss/gain: " + (energy - EXPECTED_ENERGY));
+		if (energy < minEnergy) {
+			minEnergy = energy;
+		}
+		if (energy > maxEnergy) {
+			maxEnergy = energy;
+		}
+		if (physicsCounter % 1000 == 0) {
+			System.out.println("Min energy: " + minEnergy + " Max energy: " + maxEnergy);
+			minEnergy = 100;
+			maxEnergy = 0;
+		}
+		physicsCounter++;
 	}
 
 	double[] rectToPolar(double x, double y) {
@@ -111,6 +135,12 @@ class Model {
 	double[] rotate(double x, double y, double angle) {
 		double new_x = x * Math.cos(angle) - y * Math.sin(angle);
 		double new_y = x * Math.sin(angle) + y * Math.cos(angle);
+		return new double[]{new_x, new_y};
+	}
+
+	double[] rotateInverse(double x, double y, double angle) {
+		double new_x = x * Math.cos(angle) + y * Math.sin(angle);
+		double new_y = -x * Math.sin(angle) + y * Math.cos(angle);
 		return new double[]{new_x, new_y};
 	}
 	
@@ -135,7 +165,7 @@ class Model {
 		double angleToOtherBall(Ball other) {
 			double dx = other.x - x;
 			double dy = other.y - y;
-			return Math.atan(dy / dx);
+			return Math.atan2(dy, dx);
 		}
 
 		double distanceToOtherBall(Ball other) {
