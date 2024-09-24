@@ -1,6 +1,6 @@
 package ballz;
 
-import java.lang.Math;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
@@ -32,46 +32,44 @@ class Model {
         balls = new Ball[3];
         balls[0] = new Ball(0, height * 0.7, 1, 0.6, 0.2, 1);
         balls[1] = new Ball(2 * width / 3, height * 0.9, -1, -1.2, 0.3, 1);
-        balls[2] = new Ball(width / 3, height * 0.4, -1, -1.0, 0.5, 5);
+        balls[2] = new Ball(width / 3, height * 0.4, -1, -1.0, 0.5, 50);
     }
 
     void step(double deltaT) {
         // TODO this method implements one step of simulation with a step deltaT
         energy = 0;
-        HashMap<Ball, Ball> collisions = new HashMap<>();
-        for (Ball b : balls) {
-            // detect collision with the border
-            if (b.x < b.radius || b.x > areaWidth - b.radius) {
-                b.vx *= -1; // change direction of ball
-                b.x = Math.clamp(b.x, b.radius, areaWidth - b.radius); // make sure the ball is within the area
+        for (int i = 0; i < balls.length; i++) {
+            Ball a = balls[i];
+            if (a.x < a.radius || a.x > areaWidth - a.radius) {
+                a.vx *= -1; // change direction of ball
+                a.x = Math.clamp(a.x, a.radius, areaWidth - a.radius); // make sure the ball is within the area
             }
-            if (b.y < b.radius || b.y > areaHeight - b.radius) {
-                b.vy *= -1;
-                b.y = Math.clamp(b.y, b.radius, areaHeight - b.radius);
+            if (a.y < a.radius || a.y > areaHeight - a.radius) {
+                a.vy *= -1;
+                a.y = Math.clamp(a.y, a.radius, areaHeight - a.radius);
             }
-
-            // detect collision with other balls
-            for (Ball other : balls) {
-                if (b == other || (collisions.containsKey(b) && collisions.get(b) == other)) {
-                    continue;
-                }
-                collisions.put(b, other);
-
-                if (b.distanceToOtherBall(other) <= 0) {
+            for (int j = i + 1; j < balls.length && i < balls.length - 1; j++) {
+                Ball b = balls[j];
+                // detect collision with the border
+                if (a.distanceToOtherBall(b) <= 0) {
+                    if (sanityCheck(a, b)) {
+                        collide(a, b);
+                    }
                     // rotate the speed of the balls
-                    collide(b, other);
                 }
             }
-
-            b.vy += deltaT * GRAVITY;
+            /*
+             * TODO The problem seems to be that we're moving the balls before all
+             * collisions have been handled.
+             */
+            a.vy += deltaT * GRAVITY;
 
             // compute new position according to the speed of the ball
-            b.x += deltaT * b.vx;
-            b.y += deltaT * b.vy;
+            a.x += deltaT * a.vx;
+            a.y += deltaT * a.vy;
 
-            energy += b.mass * Math.pow(b.getVelocity(), 2) / 2 - b.mass * GRAVITY * b.y;
+            energy += a.mass * Math.pow(a.getVelocity(), 2) / 2 - a.mass * GRAVITY * a.y;
         }
-
         System.out.println(energy);
 
         // Adjust for energy loss by floating point inaccuracy
@@ -82,33 +80,29 @@ class Model {
         // }
     }
 
-    void collide(Ball b, Ball other) {
-        double distance = b.distanceToOtherBall(other);
+    void collide(Ball a, Ball b) {
+        double distance = a.distanceToOtherBall(b);
 
-        double angle = b.angleToOtherBall(other);
+        double angle = a.angleToOtherBall(b);
+        double[] a_rotated = rotate(a.vx, a.vy, angle);
         double[] b_rotated = rotate(b.vx, b.vy, angle);
-        double[] other_rotated = rotate(other.vx, other.vy, angle);
 
-        double b_vx = (b.mass - other.mass) / (b.mass + other.mass) * b_rotated[0]
-                + 2 * other.mass / (b.mass + other.mass) * other_rotated[0];
+        double a_vx = (a.mass - b.mass) / (a.mass + b.mass) * a_rotated[0]
+                + 2 * b.mass / (a.mass + b.mass) * b_rotated[0];
 
-        double other_vx = (other.mass - b.mass) / (b.mass + other.mass) * other_rotated[0]
-                + 2 * b.mass / (b.mass + other.mass) * b_rotated[0];
+        double b_vx = (b.mass - a.mass) / (a.mass + b.mass) * b_rotated[0]
+                + 2 * a.mass / (a.mass + b.mass) * a_rotated[0];
 
+        double[] a_unrotated = rotateInverse(a_vx, a_rotated[1], angle);
         double[] b_unrotated = rotateInverse(b_vx, b_rotated[1], angle);
-        double[] other_unrotated = rotateInverse(other_vx, other_rotated[1], angle);
+
+        a.vx = a_unrotated[0];
+        a.vy = a_unrotated[1];
 
         b.vx = b_unrotated[0];
         b.vy = b_unrotated[1];
 
-        other.vx = other_unrotated[0];
-        other.vy = other_unrotated[1];
-
-        b.x += distance / 2 * Math.cos(angle);
-        b.y += distance / 2 * Math.sin(angle);
-
-        other.x -= distance / 2 * Math.cos(angle);
-        other.y -= distance / 2 * Math.sin(angle);
+        System.out.println(a.distanceToOtherBall(b));
 
     }
 
@@ -134,6 +128,26 @@ class Model {
         return rotate(x, y, -angle);
     }
 
+    boolean sanityCheck(Ball a, Ball b) {
+        if (a.x > b.x && b.vx > a.vx)
+            return true;
+        if (a.y > b.y && b.vy > a.vy)
+            return true;
+        if (a.x < b.x && a.vx > b.vx)
+            return true;
+        if (a.y < b.y && a.vy > b.vy)
+            return true;
+        if (b.x > a.x && a.vx > b.vx)
+            return true;
+        if (b.y > a.y && a.vx > b.vy)
+            return true;
+        if (b.x < a.x && b.vx > a.vx)
+            return true;
+        if (b.y < a.y && b.vx > a.vy)
+            return true;
+        return false;
+    }
+
     /**
      * Simple inner class describing balls.
      */
@@ -157,7 +171,7 @@ class Model {
         double angleToOtherBall(Ball other) {
             double dx = other.x - x;
             double dy = other.y - y;
-            return -Math.atan2(dy, dx);
+            return -Math.atan(dy / dx);
         }
 
         double distanceToOtherBall(Ball other) {
