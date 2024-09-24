@@ -12,7 +12,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
-import bouncing_balls.Model.Ball;
+import ballz.Model.Ball;
 
 /**
  * Animated JPanel drawing the bouncing balls. No modifications are needed in this class.
