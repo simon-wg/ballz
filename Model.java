@@ -67,5 +67,17 @@ class Model {
 		 * Position, speed, and radius of the ball. You may wish to add other attributes.
 		 */
 		double x, y, vx, vy, radius;
+
+		Pair<double, double> rectToPolar(double x, double y) {
+			double r = Math.sqrt(x * x + y * y);
+			double theta = Math.atan2(y, x);
+			return new Pair<>(r, theta);
+		}
+
+		Pair<double, double> polarToRect(double r, double theta) {
+			double x = r * Math.cos(theta);
+			double y = r * Math.sin(theta);
+			return new Pair<>(x, y);
+		}
 	}
 }
