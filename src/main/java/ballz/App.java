@@ -12,8 +12,6 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
-import ballz.Model.Ball;
-
 /**
  * Animated JPanel drawing the bouncing balls. No modifications are needed in
  * this class.
@@ -91,7 +89,7 @@ public final class App extends JPanel implements ActionListener {
         // creating and showing this application's GUI.
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                App anim = new App(800, 600, 240);
+                App anim = new App(800, 600, 144);
                 JFrame frame = new JFrame("Bouncing balls");
                 frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 frame.add(anim);
