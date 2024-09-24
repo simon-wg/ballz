@@ -2,6 +2,7 @@ package ballz;
 
 import java.lang.Math;
 import java.util.HashMap;
+import java.util.ArrayList;
 
 /**
  * The physics model.
@@ -23,13 +24,11 @@ class Model {
 
 	double EXPECTED_ENERGY;
 	
-	Ball [] balls;
+	Ball[] balls;
+
+	ArrayList<Double> energyList = new ArrayList<Double>();
 
 	int physicsCounter = 0;
-
-	double minEnergy = 100;
-
-	double maxEnergy;
 
 	Model(double width, double height) {
 		areaWidth = width;
@@ -99,24 +98,25 @@ class Model {
 		
 			energy += (b.vx * b.vx + b.vy * b.vy)/2 - GRAVITY * b.y;
 		}
-		// Adjust for energy loss
-		double energy_factor = Math.sqrt(EXPECTED_ENERGY / energy);
-		for (Ball b : balls) {
-			b.vx *= energy_factor;
-			b.vy *= energy_factor;
-		}
+
+		// Adjust for energy loss by floating point inaccuracy
+		// double energy_factor = Math.sqrt(EXPECTED_ENERGY / energy);
+		// for (Ball b : balls) {
+		// 	b.vx *= energy_factor;
+		// 	b.vy *= energy_factor;
+		// }
 		// System.out.println("Energy loss/gain: " + (energy - EXPECTED_ENERGY));
-		if (energy < minEnergy) {
-			minEnergy = energy;
-		}
-		if (energy > maxEnergy) {
-			maxEnergy = energy;
-		}
+
+		energyList.add(energy);
 		if (physicsCounter % 1000 == 0) {
-			System.out.println("Min energy: " + minEnergy + " Max energy: " + maxEnergy);
-			minEnergy = 100;
-			maxEnergy = 0;
+			double minEnergy = energyList.stream().min(Double::compare).get();
+			double maxEnergy = energyList.stream().max(Double::compare).get();
+			double avgEnergy = energyList.stream().mapToDouble(Double::doubleValue).average().getAsDouble();
+			double percentileLow = energyList.stream().sorted().skip((int)(energyList.size() * 0.01)).findFirst().get();
+			double percentileHigh = energyList.stream().sorted().skip((int)(energyList.size() * 0.99)).findFirst().get();
+			System.out.println("Energy: " + energy + " Min: " + minEnergy + " Max: " + maxEnergy + " Avg: " + avgEnergy + " 1% low: " + percentileLow + " 1% high: " + percentileHigh);
 		}
+
 		physicsCounter++;
 	}
 
