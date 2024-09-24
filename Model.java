@@ -16,7 +16,7 @@ class Model {
 
 	double areaWidth, areaHeight;
 
-	static final double GRAVITY = -0.2;
+	static final double GRAVITY = -9.82;
 	
 	Ball [] balls;
 
@@ -36,20 +36,17 @@ class Model {
 			// detect collision with the border
 			if (b.x < b.radius || b.x > areaWidth - b.radius) {
 				b.vx *= -1; // change direction of ball
+				b.x = Math.clamp(b.x, b.radius, areaWidth - b.radius); // make sure the ball is within the area
 			}
 			if (b.y < b.radius || b.y > areaHeight - b.radius) {
 				b.vy *= -1;
+				b.y = Math.clamp(b.y, b.radius, areaHeight - b.radius);
 			}
-			b.vy += GRAVITY;
+			b.vy += deltaT * GRAVITY;
 			
 			// compute new position according to the speed of the ball
 			b.x += deltaT * b.vx;
 			b.y += deltaT * b.vy;
-
-			b.x = Math.clamp(b.x, b.radius - 0.1, areaWidth - b.radius + 0.1);
-			b.y = Math.clamp(b.y, b.radius - 0.1, areaWidth - b.radius + 0.1);
-
-			System.out.println("x: " + b.x + " y: " + b.y + " vx: " + b.vx + " vy: " + b.vy);
 		}
 	}
 	
