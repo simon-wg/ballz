@@ -1,5 +1,7 @@
 package ballz;
 
+import java.lang.Math;
+
 /**
  * The physics model.
  * 
@@ -14,7 +16,7 @@ class Model {
 
 	double areaWidth, areaHeight;
 
-	static final double GRAVITY = -9.82;
+	static final double GRAVITY = -0.2;
 	
 	Ball [] balls;
 
@@ -43,7 +45,11 @@ class Model {
 			// compute new position according to the speed of the ball
 			b.x += deltaT * b.vx;
 			b.y += deltaT * b.vy;
-			
+
+			b.x = Math.clamp(b.x, b.radius - 0.1, areaWidth - b.radius + 0.1);
+			b.y = Math.clamp(b.y, b.radius - 0.1, areaWidth - b.radius + 0.1);
+
+			System.out.println("x: " + b.x + " y: " + b.y + " vx: " + b.vx + " vy: " + b.vy);
 		}
 	}
 	
