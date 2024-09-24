@@ -1,4 +1,4 @@
-package bouncing_balls;
+package ballz;
 
 import java.awt.*;
 import java.awt.Color;

@@ -1,4 +1,4 @@
-package bouncing_balls;
+package ballz;
 
 /**
  * The physics model.
@@ -13,6 +13,8 @@ package bouncing_balls;
 class Model {
 
 	double areaWidth, areaHeight;
+
+	static final double GRAVITY = -9.82;
 	
 	Ball [] balls;
 
@@ -36,10 +38,12 @@ class Model {
 			if (b.y < b.radius || b.y > areaHeight - b.radius) {
 				b.vy *= -1;
 			}
+			b.vy += GRAVITY;
 			
 			// compute new position according to the speed of the ball
 			b.x += deltaT * b.vx;
 			b.y += deltaT * b.vy;
+			
 		}
 	}
 	
