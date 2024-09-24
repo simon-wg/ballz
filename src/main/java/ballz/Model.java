@@ -30,9 +30,9 @@ class Model {
 
         // Initialize the model with a few balls
         balls = new Ball[3];
-        balls[0] = new Ball(width / 3, height * 0.9, 1.2, 1.6, 0.2, 1);
-        balls[1] = new Ball(2 * width / 3, height * 0.7, -0.6, 0.6, 0.3, 1);
-        balls[2] = new Ball(width / 3, height * 0.4, -1, -1.0, 0.5, 10);
+        balls[0] = new Ball(0, height * 0.7, 1, 0.6, 0.2, 1);
+        balls[1] = new Ball(2 * width / 3, height * 0.9, -1, -1.2, 0.3, 1);
+        balls[2] = new Ball(width / 3, height * 0.4, -1, -1.0, 0.5, 5);
     }
 
     void step(double deltaT) {
@@ -92,7 +92,8 @@ class Model {
         double b_vx = (b.mass - other.mass) / (b.mass + other.mass) * b_rotated[0]
                 + 2 * other.mass / (b.mass + other.mass) * other_rotated[0];
 
-        double other_vx = 2 * b.mass / (b.mass + other.mass) * b_rotated[0];
+        double other_vx = (other.mass - b.mass) / (b.mass + other.mass) * other_rotated[0]
+                + 2 * b.mass / (b.mass + other.mass) * b_rotated[0];
 
         double[] b_unrotated = rotateInverse(b_vx, b_rotated[1], -angle);
         double[] other_unrotated = rotateInverse(other_vx, other_rotated[1], -angle);
