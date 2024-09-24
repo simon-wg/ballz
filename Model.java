@@ -18,17 +18,13 @@ class Model {
 
 	double areaWidth, areaHeight;
 
-	double energy;
-
 	final double GRAVITY = -0.982;
 
 	double EXPECTED_ENERGY;
 	
+	double energy;
+	
 	Ball[] balls;
-
-	ArrayList<Double> energyList = new ArrayList<Double>();
-
-	int physicsCounter = 0;
 
 	Model(double width, double height) {
 		areaWidth = width;
@@ -99,25 +95,14 @@ class Model {
 			energy += (b.vx * b.vx + b.vy * b.vy)/2 - GRAVITY * b.y;
 		}
 
+		System.out.println(energy);
+
 		// Adjust for energy loss by floating point inaccuracy
 		// double energy_factor = Math.sqrt(EXPECTED_ENERGY / energy);
 		// for (Ball b : balls) {
 		// 	b.vx *= energy_factor;
 		// 	b.vy *= energy_factor;
 		// }
-		// System.out.println("Energy loss/gain: " + (energy - EXPECTED_ENERGY));
-
-		energyList.add(energy);
-		if (physicsCounter % 1000 == 0) {
-			double minEnergy = energyList.stream().min(Double::compare).get();
-			double maxEnergy = energyList.stream().max(Double::compare).get();
-			double avgEnergy = energyList.stream().mapToDouble(Double::doubleValue).average().getAsDouble();
-			double percentileLow = energyList.stream().sorted().skip((int)(energyList.size() * 0.01)).findFirst().get();
-			double percentileHigh = energyList.stream().sorted().skip((int)(energyList.size() * 0.99)).findFirst().get();
-			System.out.println("Energy: " + energy + " Min: " + minEnergy + " Max: " + maxEnergy + " Avg: " + avgEnergy + " 1% low: " + percentileLow + " 1% high: " + percentileHigh);
-		}
-
-		physicsCounter++;
 	}
 
 	double[] rectToPolar(double x, double y) {
