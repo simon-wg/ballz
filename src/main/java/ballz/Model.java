@@ -86,8 +86,8 @@ class Model {
         double distance = b.distanceToOtherBall(other);
 
         double angle = b.angleToOtherBall(other);
-        double[] b_rotated = rotate(b.vx, b.vy, -angle);
-        double[] other_rotated = rotate(other.vx, other.vy, -angle);
+        double[] b_rotated = rotate(b.vx, b.vy, angle);
+        double[] other_rotated = rotate(other.vx, other.vy, angle);
 
         double b_vx = (b.mass - other.mass) / (b.mass + other.mass) * b_rotated[0]
                 + 2 * other.mass / (b.mass + other.mass) * other_rotated[0];
@@ -95,8 +95,8 @@ class Model {
         double other_vx = (other.mass - b.mass) / (b.mass + other.mass) * other_rotated[0]
                 + 2 * b.mass / (b.mass + other.mass) * b_rotated[0];
 
-        double[] b_unrotated = rotateInverse(b_vx, b_rotated[1], -angle);
-        double[] other_unrotated = rotateInverse(other_vx, other_rotated[1], -angle);
+        double[] b_unrotated = rotateInverse(b_vx, b_rotated[1], angle);
+        double[] other_unrotated = rotateInverse(other_vx, other_rotated[1], angle);
 
         b.vx = b_unrotated[0];
         b.vy = b_unrotated[1];
@@ -157,7 +157,7 @@ class Model {
         double angleToOtherBall(Ball other) {
             double dx = other.x - x;
             double dy = other.y - y;
-            return Math.atan2(dy, dx);
+            return -Math.atan2(dy, dx);
         }
 
         double distanceToOtherBall(Ball other) {
