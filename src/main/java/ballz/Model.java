@@ -1,5 +1,8 @@
 package ballz;
 
+import java.util.List;
+import java.util.ArrayList;
+
 /**
  * The physics model.
  *
@@ -19,27 +22,28 @@ class Model {
 
     double energy;
 
-    Ball[] balls;
+    List<Ball> balls = new ArrayList<Ball>();
 
     double EXPECTED_ENERGY;
+
+    int stepCount = 0;
 
     Model(double width, double height) {
         areaWidth = width;
         areaHeight = height;
 
         // Initialize the model with a few balls
-        balls = new Ball[3];
-        balls[0] = new Ball(width / 5, height * 0.7, 1, 0.6, 0.2, 1);
-        balls[1] = new Ball(2 * width / 3, height * 0.8, -1, -1.2, 0.3, 1);
-        balls[2] = new Ball(width / 3, height * 0.4, -1, -1.0, 0.5, 50);
+        balls.add(new Ball(width / 5, height * 0.7, 1, 0.6, 0.2, 1));
+        balls.add(new Ball(width / 3, height * 0.8, -1, -1.2, 0.3, 1));
 
         EXPECTED_ENERGY = calculateExpectedEnergy(balls);
     }
 
     void step(double deltaT) {
+        stepCount++;
         energy = 0;
-        for (int i = 0; i < balls.length; i++) {
-            Ball a = balls[i];
+        for (int i = 0; i < balls.size(); i++) {
+            Ball a = balls.get(i);
 
             if (a.x <= a.radius || a.x >= areaWidth - a.radius) {
                 a.vx *= -1; // change direction of ball
@@ -47,8 +51,8 @@ class Model {
             if (a.y <= a.radius || a.y >= areaHeight - a.radius) {
                 a.vy *= -1;
             }
-            for (int j = i + 1; j < balls.length && i < balls.length - 1; j++) {
-                Ball b = balls[j];
+            for (int j = i + 1; j < balls.size() && i < balls.size() - 1; j++) {
+                Ball b = balls.get(j);
                 // detect collision with the border
                 if (a.distanceToOtherBall(b) <= 0) {
                     if (sanityCheck(a, b)) {
@@ -64,13 +68,19 @@ class Model {
 
             a.vy += GRAVITY * deltaT; // apply gravity
 
-            a.x = Math.clamp(a.x, -a.radius, areaWidth); // make sure the ball is within the area
-            a.y = Math.clamp(a.y, -a.radius, areaHeight);
+            // prevent out of bounds
+            // a.x = Math.clamp(a.x, a.radius, areaWidth - a.radius);
+            // a.y = Math.clamp(a.y, a.radius, areaHeight - a.radius);
 
-            energy += a.mass * Math.pow(a.getVelocity(), 2) / 2 - a.mass * GRAVITY * a.y;
+            energy += a.getKineticEnergy() - a.getPotentialEnergy(GRAVITY);
         }
 
-        System.out.println(energy);
+        // if (stepCount == 100) {
+        // System.out.println("Energy: " + energy);
+        // System.out.println("Expected Energy: " + EXPECTED_ENERGY);
+        // System.out.println("Energy Difference: " + (energy - EXPECTED_ENERGY));
+        // stepCount = 0;
+        // }
 
         // Adjust for energy loss by floating point inaccuracy
         // double energy_factor = Math.sqrt(EXPECTED_ENERGY / energy);
@@ -112,10 +122,10 @@ class Model {
     }
 
     boolean sanityCheck(Ball a, Ball b) {
-        return (sanityCheckAx(a, b) || sanityCheckAy(a, b) || sanityCheckBx(a, b) || sanityCheckBy(a, b));
+        return (sanityCheckX(a, b) || sanityCheckY(a, b));
     }
 
-    boolean sanityCheckAx(Ball a, Ball b) {
+    boolean sanityCheckX(Ball a, Ball b) {
         if (a.x > b.x && b.vx > a.vx)
             return true;
         if (a.x < b.x && a.vx > b.vx)
@@ -123,7 +133,7 @@ class Model {
         return false;
     }
 
-    boolean sanityCheckAy(Ball a, Ball b) {
+    boolean sanityCheckY(Ball a, Ball b) {
         if (a.y > b.y && b.vy > a.vy)
             return true;
         if (a.y < b.y && a.vy > b.vy)
@@ -131,26 +141,10 @@ class Model {
         return false;
     }
 
-    boolean sanityCheckBx(Ball a, Ball b) {
-        if (b.x > a.x && a.vx > b.vx)
-            return true;
-        if (b.x < a.x && b.vx > a.vx)
-            return true;
-        return false;
-    }
-
-    boolean sanityCheckBy(Ball a, Ball b) {
-        if (b.y > a.y && a.vx > b.vy)
-            return true;
-        if (b.y < a.y && b.vx > a.vy)
-            return true;
-        return false;
-    }
-
-    double calculateExpectedEnergy(Ball[] balls) {
+    double calculateExpectedEnergy(List<Ball> balls) {
         double energy = 0;
         for (Ball b : balls) {
-            energy += b.mass * Math.pow(b.getVelocity(), 2) / 2 - b.mass * GRAVITY * b.y;
+            energy += b.getKineticEnergy() - b.getPotentialEnergy(GRAVITY);
         }
         return energy;
     }

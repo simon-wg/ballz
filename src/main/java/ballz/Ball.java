@@ -31,4 +31,16 @@ class Ball {
     double getVelocity() {
         return Math.sqrt(vx * vx + vy * vy);
     }
+
+    double getKineticEnergy() {
+        return 0.5 * mass * (vx * vx + vy * vy);
+    }
+
+    double getPotentialEnergy(double gravity) {
+        return mass * gravity * y;
+    }
+
+    double getMomentum() {
+        return mass * getVelocity();
+    }
 }
