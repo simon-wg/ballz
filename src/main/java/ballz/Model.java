@@ -18,7 +18,7 @@ class Model {
 
     double areaWidth, areaHeight;
 
-    double GRAVITY = -9.82;
+    double GRAVITY = -9.81;
 
     double energy;
 
@@ -33,8 +33,8 @@ class Model {
         areaHeight = height;
 
         // Initialize the model with a few balls
-        balls.add(new Ball(width / 5, height * 0.7, 1, 0.6, 0.2, 1));
-        balls.add(new Ball(width / 3, height * 0.8, -1, -1.2, 0.3, 1));
+        balls.add(new Ball(width / 2, height - 0.5, -1.6, 0.6, 0.5, 10));
+        balls.add(new Ball(2 * width / 3, height / 4, 0.6, 1.7, 0.2, 1));
 
         EXPECTED_ENERGY = calculateExpectedEnergy(balls);
     }
@@ -75,19 +75,19 @@ class Model {
             energy += a.getKineticEnergy() - a.getPotentialEnergy(GRAVITY);
         }
 
-        // if (stepCount == 100) {
-        // System.out.println("Energy: " + energy);
-        // System.out.println("Expected Energy: " + EXPECTED_ENERGY);
-        // System.out.println("Energy Difference: " + (energy - EXPECTED_ENERGY));
-        // stepCount = 0;
-        // }
+        if (stepCount == 100) {
+            System.out.println("Energy: " + energy);
+            System.out.println("Expected Energy: " + EXPECTED_ENERGY);
+            System.out.println("Energy Difference: " + (energy / EXPECTED_ENERGY));
+            stepCount = 0;
+        }
 
         // Adjust for energy loss by floating point inaccuracy
-        // double energy_factor = Math.sqrt(EXPECTED_ENERGY / energy);
-        // for (Ball b : balls) {
-        // b.vx *= Math.sqrt(energy_factor);
-        // b.vy *= Math.sqrt(energy_factor);
-        // }
+        double energy_factor = Math.sqrt(EXPECTED_ENERGY / energy);
+        for (Ball b : balls) {
+            b.vx *= (energy_factor);
+            b.vy *= (energy_factor);
+        }
     }
 
     void collide(Ball a, Ball b) {
