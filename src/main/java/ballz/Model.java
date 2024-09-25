@@ -15,11 +15,13 @@ class Model {
 
     double areaWidth, areaHeight;
 
-    final double GRAVITY = -0.982;
+    double GRAVITY = -9.82;
 
     double energy;
 
     Ball[] balls;
+
+    double EXPECTED_ENERGY;
 
     Model(double width, double height) {
         areaWidth = width;
@@ -27,15 +29,18 @@ class Model {
 
         // Initialize the model with a few balls
         balls = new Ball[3];
-        balls[0] = new Ball(0, height * 0.7, 1, 0.6, 0.2, 1);
-        balls[1] = new Ball(2 * width / 3, height * 0.9, -1, -1.2, 0.3, 1);
+        balls[0] = new Ball(width / 5, height * 0.7, 1, 0.6, 0.2, 1);
+        balls[1] = new Ball(2 * width / 3, height * 0.8, -1, -1.2, 0.3, 1);
         balls[2] = new Ball(width / 3, height * 0.4, -1, -1.0, 0.5, 50);
+
+        EXPECTED_ENERGY = calculateExpectedEnergy(balls);
     }
 
     void step(double deltaT) {
         energy = 0;
         for (int i = 0; i < balls.length; i++) {
             Ball a = balls[i];
+
             if (a.x <= a.radius || a.x >= areaWidth - a.radius) {
                 a.vx *= -1; // change direction of ball
             }
@@ -52,24 +57,26 @@ class Model {
                     // rotate the speed of the balls
                 }
             }
-            a.vy += deltaT * GRAVITY;
 
             // compute new position according to the speed of the ball
             a.x += deltaT * a.vx;
-            a.y += deltaT * a.vy;
+            a.y += deltaT * a.vy + 0.5 * GRAVITY * Math.pow(deltaT, 2);
 
-            a.x = Math.clamp(a.x, a.radius, areaWidth - a.radius); // make sure the ball is within the area
-            a.y = Math.clamp(a.y, a.radius, areaHeight - a.radius);
+            a.vy += GRAVITY * deltaT; // apply gravity
+
+            a.x = Math.clamp(a.x, -a.radius, areaWidth); // make sure the ball is within the area
+            a.y = Math.clamp(a.y, -a.radius, areaHeight);
 
             energy += a.mass * Math.pow(a.getVelocity(), 2) / 2 - a.mass * GRAVITY * a.y;
         }
+
         System.out.println(energy);
 
         // Adjust for energy loss by floating point inaccuracy
         // double energy_factor = Math.sqrt(EXPECTED_ENERGY / energy);
         // for (Ball b : balls) {
-        // b.vx *= energy_factor;
-        // b.vy *= energy_factor;
+        // b.vx *= Math.sqrt(energy_factor);
+        // b.vy *= Math.sqrt(energy_factor);
         // }
     }
 
@@ -138,5 +145,13 @@ class Model {
         if (b.y < a.y && b.vx > a.vy)
             return true;
         return false;
+    }
+
+    double calculateExpectedEnergy(Ball[] balls) {
+        double energy = 0;
+        for (Ball b : balls) {
+            energy += b.mass * Math.pow(b.getVelocity(), 2) / 2 - b.mass * GRAVITY * b.y;
+        }
+        return energy;
     }
 }
