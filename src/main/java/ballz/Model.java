@@ -77,7 +77,11 @@ class Model {
             stepCount = 0;
         }
 
-        // Adjust for energy loss by floating point inaccuracy
+        /*
+         * Adjust for energy loss by floating point inaccuracy
+         * We tested without this function, and made sure that the energy fluctuations
+         * are caused by floating point inaccuracy.
+         */
         double energy_factor = Math.sqrt(EXPECTED_ENERGY / energy);
         for (Ball b : balls) {
             b.vx *= (energy_factor);
