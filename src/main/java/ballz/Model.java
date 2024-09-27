@@ -33,8 +33,8 @@ class Model {
         areaHeight = height;
 
         // Initialize the model with a few balls
-        balls.add(new Ball(width / 2, height - 0.5, -1.6, 0.6, 0.5, 10));
-        balls.add(new Ball(2 * width / 3, height / 4, 0.6, 1.7, 0.2, 1));
+        balls.add(new Ball(width / 3, height * 0.9, 1.2, 1.6, 0.2, 2));
+        balls.add(new Ball(2 * width / 3, height * 0.7, -0.6, 0.6, 0.3, 1));
 
         EXPECTED_ENERGY = calculateExpectedEnergy(balls);
     }
@@ -53,12 +53,11 @@ class Model {
             }
             for (int j = i + 1; j < balls.size() && i < balls.size() - 1; j++) {
                 Ball b = balls.get(j);
-                // detect collision with the border
+                // detect collision with other balls
                 if (a.distanceToOtherBall(b) <= 0) {
                     if (sanityCheck(a, b)) {
                         collide(a, b);
                     }
-                    // rotate the speed of the balls
                 }
             }
 
@@ -66,11 +65,7 @@ class Model {
             a.x += deltaT * a.vx;
             a.y += deltaT * a.vy + 0.5 * GRAVITY * Math.pow(deltaT, 2);
 
-            a.vy += GRAVITY * deltaT; // apply gravity
-
-            // prevent out of bounds
-            // a.x = Math.clamp(a.x, a.radius, areaWidth - a.radius);
-            // a.y = Math.clamp(a.y, a.radius, areaHeight - a.radius);
+            a.vy += GRAVITY * deltaT;
 
             energy += a.getKineticEnergy() - a.getPotentialEnergy(GRAVITY);
         }
